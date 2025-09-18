@@ -4,8 +4,12 @@ import { logout, setCredentials } from '../redux/slices/authSlice';
 import { showToast } from '../redux/slices/uiSlice';
 
 // Create axios instance
+const apiBaseUrl = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL)
+  ? import.meta.env.VITE_API_URL
+  : (process.env.REACT_APP_API_URL || 'http://localhost:8000/api');
+
 const apiClient = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8000/api',
+  baseURL: apiBaseUrl,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',

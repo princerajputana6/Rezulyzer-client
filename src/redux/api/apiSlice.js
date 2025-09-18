@@ -1,7 +1,12 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { logout, setCredentials } from '../slices/authSlice';
+
+const apiBase = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL)
+  ? import.meta.env.VITE_API_URL
+  : (process.env.REACT_APP_API_URL || 'http://localhost:8000/api');
 
 const baseQuery = fetchBaseQuery({
-  baseUrl: process.env.REACT_APP_API_URL || 'http://localhost:8000/api',
+  baseUrl: apiBase,
   prepareHeaders: (headers, { getState }) => {
     const token = getState().auth.token;
     if (token) {
@@ -40,5 +45,3 @@ export const apiSlice = createApi({
   endpoints: (builder) => ({}),
 });
 
-// Import logout action (will be defined in authSlice)
-const { logout, setCredentials } = require('../slices/authSlice');

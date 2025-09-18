@@ -21,7 +21,9 @@ export const store = configureStore({
         ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE'],
       },
     }).concat(apiSlice.middleware),
-  devTools: process.env.NODE_ENV !== 'production',
+  devTools: (typeof import.meta !== 'undefined' && import.meta.env && typeof import.meta.env.DEV !== 'undefined')
+    ? import.meta.env.DEV
+    : (process.env.NODE_ENV !== 'production'),
 });
 
 export default store;
