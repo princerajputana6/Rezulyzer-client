@@ -3,7 +3,7 @@ import { logout, setCredentials } from '../slices/authSlice';
 
 const apiBase = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL)
   ? import.meta.env.VITE_API_URL
-  : (process.env.REACT_APP_API_URL || 'http://localhost:8000/api');
+  : (process.env.REACT_APP_API_URL);
 
 const baseQuery = fetchBaseQuery({
   baseUrl: apiBase,

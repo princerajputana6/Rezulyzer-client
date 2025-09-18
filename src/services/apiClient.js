@@ -6,7 +6,7 @@ import { showToast } from '../redux/slices/uiSlice';
 // Create axios instance
 const apiBaseUrl = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL)
   ? import.meta.env.VITE_API_URL
-  : (process.env.REACT_APP_API_URL || 'http://localhost:8000/api');
+  : (process.env.REACT_APP_API_URL);
 
 const apiClient = axios.create({
   baseURL: apiBaseUrl,

@@ -5,7 +5,7 @@ const API_BASE_URL =
   (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL)
     ? import.meta.env.VITE_API_URL
     : (process.env.REACT_APP_API_BASE_URL ||
-      (window?.location?.origin ? `${window.location.origin.replace(/\/$/, '')}/api` : 'http://localhost:8000/api'));
+      (window?.location?.origin && `${window.location.origin.replace(/\/$/, '')}/api`));
 
 export const candidateApiClient = axios.create({
   baseURL: API_BASE_URL,
