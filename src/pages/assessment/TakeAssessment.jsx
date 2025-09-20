@@ -65,7 +65,12 @@ const TakeAssessment = () => {
         if (document.exitFullscreen) {
           try { await document.exitFullscreen(); } catch {}
         }
-        navigate('/assessment-login');
+        // Redirect candidate to their dashboard after auto-submission
+        try {
+          sessionStorage.setItem('dash_test_id', testId);
+          if (attempt?._id) sessionStorage.setItem('dash_attempt_id', attempt._id);
+        } catch {}
+        navigate('/assessment/dashboard');
       }
     } catch (e) {
       // Non-blocking
@@ -231,8 +236,13 @@ const TakeAssessment = () => {
         // Show thank-you modal, then redirect
         setShowThanks(true);
         setTimeout(() => {
-          navigate('/assessment-login');
-        }, 3000);
+          const returnedAttemptId = submitRes.data?.data?.attempt?.id || attempt._id;
+          try {
+            sessionStorage.setItem('dash_test_id', testId);
+            sessionStorage.setItem('dash_attempt_id', returnedAttemptId);
+          } catch {}
+          navigate('/assessment/dashboard');
+        }, 1500);
       } else {
         throw new Error('Submission failed');
       }

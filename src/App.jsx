@@ -17,6 +17,7 @@ import LoginPage from './pages/auth/LoginPage';
 import CandidateLogin from './pages/assessment/CandidateLogin';
 import Precautions from './pages/assessment/Precautions';
 import TakeAssessment from './pages/assessment/TakeAssessment';
+import CandidateDashboard from './pages/assessment/Dashboard';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import CreateTest from './pages/test/CreateTest';
 import TakeTest from './pages/test/TakeTest';
@@ -41,6 +42,9 @@ import EditCandidatePage from './pages/candidates/EditCandidatePage';
 import InterviewListPage from './pages/interviews/InterviewListPage';
 import ScheduleInterviewPage from './pages/interviews/ScheduleInterviewPage';
 import InterviewDetailPage from './pages/interviews/InterviewDetailPage';
+import JDList from './pages/jd/JDList';
+import JDForm from './pages/jd/JDForm';
+import JDView from './pages/jd/JDView';
 
 // Services
 import { apiClient } from './services/apiClient';
@@ -157,6 +161,32 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <TestManagement />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* Job Descriptions */}
+                <Route
+                  path="/jd"
+                  element={
+                    <ProtectedRoute requiredRole={["company","admin"]}>
+                      <JDList />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/jd/new"
+                  element={
+                    <ProtectedRoute requiredRole={["company","admin"]}>
+                      <JDForm />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/jd/:id"
+                  element={
+                    <ProtectedRoute requiredRole={["company","admin"]}>
+                      <JDView />
                     </ProtectedRoute>
                   }
                 />
@@ -354,6 +384,7 @@ function App() {
           <Route path="/assessment-login" element={<CandidateLogin />} />
           <Route path="/assessment/precautions" element={<Precautions />} />
           <Route path="/assessment/take/:testId" element={<TakeAssessment />} />
+          <Route path="/assessment/dashboard" element={<CandidateDashboard />} />
 
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>

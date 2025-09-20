@@ -33,13 +33,13 @@ class TestService {
 
   // Publish test
   async publishTest(id) {
-    const response = await apiClient.patch(`/tests/${id}/publish`);
+    const response = await apiClient.post(`/tests/${id}/publish`);
     return response.data;
   }
 
   // Archive test
   async archiveTest(id) {
-    const response = await apiClient.patch(`/tests/${id}/archive`);
+    const response = await apiClient.post(`/tests/${id}/archive`);
     return response.data;
   }
 

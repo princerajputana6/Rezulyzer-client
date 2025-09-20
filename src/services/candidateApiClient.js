@@ -9,6 +9,7 @@ const API_BASE_URL =
 
 export const candidateApiClient = axios.create({
   baseURL: API_BASE_URL,
+  timeout: 120000, // 2 minutes for AI operations and file uploads
 });
 
 candidateApiClient.interceptors.request.use((config) => {

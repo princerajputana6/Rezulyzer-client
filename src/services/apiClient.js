@@ -10,7 +10,7 @@ const apiBaseUrl = (typeof import.meta !== 'undefined' && import.meta.env && imp
 
 const apiClient = axios.create({
   baseURL: apiBaseUrl,
-  timeout: 10000,
+  timeout: 60000, // Increased to 60 seconds for AI operations
   headers: {
     'Content-Type': 'application/json',
   },
@@ -102,4 +102,80 @@ apiClient.interceptors.response.use(
   }
 );
 
-export { apiClient };
+// Create a separate client for file uploads and long operations
+const uploadClient = axios.create({
+  baseURL: apiBaseUrl,
+  timeout: 120000, // 2 minutes for file uploads and AI processing
+  headers: {
+    'Content-Type': 'multipart/form-data',
+  },
+});
+
+// Add the same interceptors to upload client
+uploadClient.interceptors.request.use(
+  (config) => {
+    const state = store.getState();
+    const token = state.auth.token;
+    
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+uploadClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    // Same error handling as main client
+    const originalRequest = error.config;
+
+    if (error.response?.status === 401 && error.response?.data?.code === 'TOKEN_EXPIRED' && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        const refreshToken = localStorage.getItem('refreshToken');
+        if (!refreshToken) {
+          throw new Error('No refresh token');
+        }
+
+        const response = await axios.post('/api/auth/refresh', {
+          refreshToken
+        });
+
+        const { accessToken, refreshToken: newRefreshToken } = response.data.data;
+        localStorage.setItem('token', accessToken);
+        localStorage.setItem('refreshToken', newRefreshToken);
+        
+        uploadClient.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+        originalRequest.headers['Authorization'] = `Bearer ${accessToken}`;
+
+        return uploadClient(originalRequest);
+        
+      } catch (refreshError) {
+        store.dispatch(logout());
+        store.dispatch(showToast({
+          message: 'Session expired. Please login again.',
+          type: 'warning'
+        }));
+        return Promise.reject(refreshError);
+      }
+    }
+    
+    const message = error.response?.data?.message || 'An error occurred';
+    
+    const silentErrors = [401, 404];
+    if (!silentErrors.includes(error.response?.status)) {
+      store.dispatch(showToast({
+        message,
+        type: 'error'
+      }));
+    }
+    
+    return Promise.reject(error);
+  }
+);
+
+export { apiClient, uploadClient };

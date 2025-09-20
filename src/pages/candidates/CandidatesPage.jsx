@@ -14,10 +14,11 @@ import {
   Users,
   UserCheck,
   UserX,
-  Clock
+  Clock,
+  Send
 } from 'lucide-react';
 import { showToast } from '../../redux/slices/toastSlice';
-import { apiClient } from '../../services/apiClient';
+import { apiClient, uploadClient } from '../../services/apiClient';
 import GenerateAssessmentModal from '../../components/candidates/GenerateAssessmentModal';
 
 const CandidatesPage = () => {
@@ -113,15 +114,31 @@ const CandidatesPage = () => {
   // Send assessment invitation email to a candidate
   const handleSendAssessment = async (candidateId) => {
     try {
-      const response = await apiClient.post(`/candidates/${candidateId}/send-assessment`);
+      dispatch(showToast({ message: 'Generating assessment... This may take up to 2 minutes.', type: 'info' }));
+      
+      // Use uploadClient for longer timeout (2 minutes) since assessment generation involves AI
+      const response = await uploadClient.post(`/candidates/${candidateId}/send-assessment`, {}, {
+        headers: {
+          'Content-Type': 'application/json', // Override multipart for this request
+        }
+      });
+      
       if (response.data.success) {
-        dispatch(showToast({ message: 'Assessment invitation sent', type: 'success' }));
+        dispatch(showToast({ message: 'Assessment invitation sent successfully!', type: 'success' }));
       } else {
         throw new Error('Failed to send invitation');
       }
     } catch (error) {
       console.error('Error sending assessment invitation:', error);
-      dispatch(showToast({ message: 'Failed to send assessment invitation', type: 'error' }));
+      
+      let errorMessage = 'Failed to send assessment invitation';
+      if (error.code === 'ECONNABORTED') {
+        errorMessage = 'Assessment generation timed out. Please try again or contact support.';
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      
+      dispatch(showToast({ message: errorMessage, type: 'error' }));
     }
   };
   
@@ -444,7 +461,7 @@ const CandidatesPage = () => {
                       {formatDate(candidate.applicationInfo?.appliedDate || candidate.createdAt)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 justify-end">
                         <button
                           onClick={() => handleViewProfile(candidate._id)}
                           className="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors"
@@ -452,75 +469,60 @@ const CandidatesPage = () => {
                           <Eye className="w-4 h-4 mr-1" />
                           View
                         </button>
-                        
-                        <div className="relative inline-block text-left">
-                          <button
-                            className="inline-flex items-center p-2 text-gray-400 hover:text-gray-600 focus:outline-none"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setDropdownOpen(dropdownOpen === candidate._id ? null : candidate._id);
-                            }}
-                          >
-                            <MoreVertical className="w-4 h-4" />
-                          </button>
-                          
-                          {dropdownOpen === candidate._id && (
-                            <div className="absolute right-0 z-10 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5">
-                              <div className="py-1">
-                                <button
-                                  onClick={() => {
-                                    handleEditCandidate(candidate._id);
-                                    setDropdownOpen(null);
-                                  }}
-                                  className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                >
-                                  <Edit className="w-4 h-4 mr-3" />
-                                  Edit
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    handleGenerateAssessment(candidate._id);
-                                    setDropdownOpen(null);
-                                  }}
-                                  className="flex items-center w-full px-4 py-2 text-sm text-indigo-600 hover:bg-gray-100"
-                                >
-                                  <UserCheck className="w-4 h-4 mr-3" />
-                                  Generate Assessment (AI)
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    handleSendAssessment(candidate._id);
-                                    setDropdownOpen(null);
-                                  }}
-                                  className="flex items-center w-full px-4 py-2 text-sm text-blue-600 hover:bg-gray-100"
-                                >
-                                  <UserCheck className="w-4 h-4 mr-3" />
-                                  Send Assessment Link
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    handleDownloadResume(candidate._id);
-                                    setDropdownOpen(null);
-                                  }}
-                                  className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                >
-                                  <Download className="w-4 h-4 mr-3" />
-                                  Download Resume
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    handleDeleteCandidate(candidate._id);
-                                    setDropdownOpen(null);
-                                  }}
-                                  className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-                                >
-                                  <Trash2 className="w-4 h-4 mr-3" />
-                                  Delete
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
+
+                        {/* Preview latest assigned test (Eye icon) */}
+                        <button
+                          onClick={() => {
+                            const assigned = Array.isArray(candidate.assignedTests) ? candidate.assignedTests : [];
+                            const latest = assigned[assigned.length - 1];
+                            const testObj = latest?.testId;
+                            const testId = typeof testObj === 'object' ? testObj?._id : testObj;
+                            if (testId) {
+                              navigate(`/tests/${testId}`);
+                            } else {
+                              dispatch(showToast({ message: 'No assigned test to preview yet', type: 'info' }));
+                            }
+                          }}
+                          className="inline-flex items-center px-3 py-1.5 bg-white border text-gray-700 text-sm rounded-md hover:bg-gray-50 transition-colors"
+                          title="Preview latest assigned assessment"
+                        >
+                          <Eye className="w-4 h-4 mr-1" />
+                          Preview
+                        </button>
+
+                        {/* Combined: Generate assessment + Send link (single action button with Send icon) */}
+                        <button
+                          onClick={() => handleSendAssessment(candidate._id)}
+                          className="inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700 transition-colors"
+                          title="Generate assessment and send link"
+                        >
+                          <Send className="w-4 h-4 mr-1" />
+                          Send Assessment
+                        </button>
+
+                        <button
+                          onClick={() => handleDownloadResume(candidate._id)}
+                          className="inline-flex items-center px-3 py-1.5 bg-gray-100 text-gray-800 text-sm rounded-md hover:bg-gray-200 transition-colors"
+                        >
+                          <Download className="w-4 h-4 mr-1" />
+                          Resume
+                        </button>
+
+                        <button
+                          onClick={() => handleEditCandidate(candidate._id)}
+                          className="inline-flex items-center px-3 py-1.5 bg-white border text-gray-700 text-sm rounded-md hover:bg-gray-50 transition-colors"
+                        >
+                          <Edit className="w-4 h-4 mr-1" />
+                          Edit
+                        </button>
+
+                        <button
+                          onClick={() => handleDeleteCandidate(candidate._id)}
+                          className="inline-flex items-center px-3 py-1.5 bg-red-50 text-red-600 text-sm rounded-md hover:bg-red-100 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4 mr-1" />
+                          Delete
+                        </button>
                       </div>
                     </td>
                   </tr>

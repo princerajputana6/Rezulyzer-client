@@ -169,7 +169,7 @@ const DashboardPage = () => {
       {/* Stats Grid */}
       {isAdmin && (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-8">
             <StatCard title="Test Templates" value={stats.totalTests} icon={FileText} color="primary" trend={12} />
             <StatCard title="Active Tests" value={stats.activeTests} icon={CheckCircle} color="success" trend={8} />
             <StatCard title="Total Users" value={stats.totalUsers} icon={Users} color="secondary" trend={15} />
@@ -179,7 +179,7 @@ const DashboardPage = () => {
       )}
 
       {isCompany && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-8">
           <StatCard title="Active Tests" value={String(stats.activeTests)} icon={CheckCircle} color="success" trend={6} subtitle="Running now" />
           <StatCard title="Candidates Today" value={String(stats.candidatesToday)} icon={Users} color="secondary" trend={4} subtitle="New today" />
           <StatCard title="Success Rate" value={`${stats.successRate}%`} icon={BarChart3} color="primary" trend={2} subtitle="Avg overall" />
@@ -290,7 +290,7 @@ const DashboardPage = () => {
                       <p className="text-xs text-gray-500">Visible to candidates</p>
                     </div>
                   </div>
-                  <span className="badge badge-success">24</span>
+                  <span className="badge badge-success">{String(stats.activeTests)}</span>
                 </div>
                 <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                   <div className="flex items-center space-x-3">
@@ -300,7 +300,7 @@ const DashboardPage = () => {
                       <p className="text-xs text-gray-500">Participating today</p>
                     </div>
                   </div>
-                  <span className="badge badge-info">89</span>
+                  <span className="badge badge-info">{String(stats.candidatesToday)}</span>
                 </div>
               </div>
             ) : (

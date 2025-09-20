@@ -274,8 +274,8 @@ const Analytics = () => {
         </div>
       </div>
 
-      {/* Overview Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Overview Metrics (2 per row) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
         <MetricCard
           title="Total Companies"
           value={analyticsData?.overview?.totalCompanies?.toLocaleString() || '0'}
